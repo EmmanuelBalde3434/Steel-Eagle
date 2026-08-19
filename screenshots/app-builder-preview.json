@@ -1,0 +1,35 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "STEEL EAGLE",
+      "hasCanvas": true,
+      "bodyTextLen": 296,
+      "bodyTextHash": "f8b5972696277eb6811fa43967727693765a2e84d576b15a4e816d6dd093985d",
+      "bodyTextPrefix": "STEEL EAGLE Defiende el águila Sonido Entrar PUNTOS 000000 RÉCOR",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "STEEL EAGLE",
+      "hasCanvas": true,
+      "bodyTextLen": 214,
+      "bodyTextHash": "55feecd726d0e4feb208ad1e648c8879b01eef3929e0725d496e0834a0ddb05e",
+      "bodyTextPrefix": "STEEL EAGLE Defiende el águila Sonido Entrar 000000 Nv 1 Vidas 3",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}
