@@ -31,9 +31,7 @@ export const Route = createRootRoute({
       </head>
       <body>
         <PreviewHostBridge />
-        <AuthProvider>
-          <Outlet />
-        </AuthProvider>
+       <Outlet />
         <Scripts />
       </body>
     </html>

@@ -35,7 +35,6 @@ import {
   tankBlocked,
   tryMove,
 } from "./collision";
-import { buildLevel, shovelBase } from "./levels";
 import { Input } from "./input";
 import { sfx, unlockAudio } from "./audio";
 import {
@@ -49,6 +48,7 @@ import {
   drawTiles,
 } from "./draw";
 import type { Actions, Boom, Bullet, Floater, Mode, Particle, Pickup, PowerKind, Tank, TankKind, UiState } from "./types";
+import { buildLevel, shovelBase, resetLevelPool } from "./levels";
 
 const HS_KEY = "steel-eagle-hs";
 
@@ -68,7 +68,7 @@ function saveHs(n: number): void {
   }
 }
 
-const POWER_CYCLE: PowerKind[] = ["star", "helmet", "clock", "shovel", "bomb", "life"];
+const POWER_CYCLE: PowerKind[] = ["star", "helmet", "clock", "shovel", "bomb", "life", "machinegun"];
 
 export class Engine {
   canvas: HTMLCanvasElement;
@@ -98,6 +98,7 @@ export class Engine {
   star = 0;
   clock = 0;
   shovel = 0;
+  machinegun = 0;
   intro = 0;
   clearHold = 0;
   nextEnemyId = 2;
@@ -147,6 +148,7 @@ export class Engine {
     this.lives = 3;
     this.stage = 1;
     this.star = 0;
+    resetLevelPool();
     this.startStage();
     sfx.stage();
   }
@@ -321,6 +323,8 @@ export class Engine {
       if (this.shovel <= 0) shovelBase(this.grid, false);
     }
 
+    if (this.machinegun > 0) this.machinegun = Math.max(0, this.machinegun - dt);
+
     this.stepPlayer(dt, actions);
     this.stepEnemies(dt);
     this.stepBullets(dt);
@@ -360,8 +364,24 @@ export class Engine {
       else if (p.dir === "right" && actions.right) dir = "right";
     }
 
-    const icy = isIce(this.grid, p.x, p.y, TANK, TANK);
-    if (dir) {
+   const icy = isIce(this.grid, p.x, p.y, TANK, TANK);
+    let isSliding = false;
+
+    if (icy) {
+      // 1. Intentamos deslizar el tanque en su dirección actual con mayor velocidad (1.3x)
+      const others = this.enemies.filter((e) => e.live);
+      const res = tryMove(this.grid, p.x, p.y, p.dir, p.speed * 1.3 * dt, others, p.id);
+      
+      if (res.moved) {
+        p.x = res.x;
+        p.y = res.y;
+        p.moveTime += dt;
+        isSliding = true; // Si patina con éxito, bloqueamos el control del jugador
+      }
+    }
+
+    if (!isSliding && dir) {
+      // 2. Movimiento y control normal (si no está patinando o si chocó estando en el hielo)
       if (dir !== p.dir) {
         if (dir === "left" || dir === "right") p.y = snapAxis(p.y);
         else p.x = snapAxis(p.x);
@@ -372,20 +392,15 @@ export class Engine {
       p.x = res.x;
       p.y = res.y;
       if (res.moved) p.moveTime += dt;
-    } else if (icy) {
-      const others = this.enemies.filter((e) => e.live);
-      const res = tryMove(this.grid, p.x, p.y, p.dir, p.speed * 0.7 * dt, others, p.id);
-      p.x = res.x;
-      p.y = res.y;
-      if (res.moved) p.moveTime += dt;
     }
 
-    const maxB =
-      this.star >= 2 ? FIRE.playerMaxBulletsStar : FIRE.playerMaxBullets;
+    const maxB = this.machinegun > 0 ? 5 : (this.star >= 2 ? FIRE.playerMaxBulletsStar : FIRE.playerMaxBullets);
     const mine = this.bullets.filter((b) => b.live && b.owner === "player").length;
+    
     if (actions.fire && p.cooldown <= 0 && mine < maxB) {
       this.shoot(p, "player");
-      p.cooldown = this.star >= 1 ? 0.2 : FIRE.playerCooldown;
+      // Si tienes machinegun, el cooldown es casi nulo (0.05s), sino usa el normal
+      p.cooldown = this.machinegun > 0 ? 0.05 : (this.star >= 1 ? 0.2 : FIRE.playerCooldown);
       this.input.consumeFire();
     }
 
@@ -523,9 +538,28 @@ export class Engine {
       const ny = b.y + d.y * b.speed * dt;
       const canSteel = b.owner === "player" && b.power >= 3;
       const hit = sweepBullet(this.grid, b.x + 2, b.y + 2, nx + 2, ny + 2, canSteel);
+      
       if (hit.kind === "tile") {
-        const res = damageTile(this.grid, hit.gx, hit.gy, b.power);
         b.live = false;
+        let res: "brick" | "steel" | "eagle" | "none" = "none";
+
+        // Lógica modificada para impactar 2 bloques adyacentes
+        if (b.dir === "up" || b.dir === "down") {
+          // Si viaja en vertical, calculamos el ancho de la bala (en el eje X)
+          const gx1 = Math.floor(b.x / CELL);
+          const gx2 = Math.floor((b.x + BULLET - 0.1) / CELL);
+          const r1 = damageTile(this.grid, gx1, hit.gy, b.power);
+          const r2 = damageTile(this.grid, gx2, hit.gy, b.power);
+          res = r1 !== "none" ? r1 : r2;
+        } else {
+          // Si viaja en horizontal, calculamos el alto de la bala (en el eje Y)
+          const gy1 = Math.floor(b.y / CELL);
+          const gy2 = Math.floor((b.y + BULLET - 0.1) / CELL);
+          const r1 = damageTile(this.grid, hit.gx, gy1, b.power);
+          const r2 = damageTile(this.grid, hit.gx, gy2, b.power);
+          res = r1 !== "none" ? r1 : r2;
+        }
+
         this.burst(hit.gx * CELL + 4, hit.gy * CELL + 4, res === "steel" ? "#9aa4ae" : "#d06040", 6);
         if (res === "eagle") {
           sfx.boom(true);
@@ -683,6 +717,8 @@ export class Engine {
     } else if (kind === "shovel") {
       this.shovel = SHOVEL_TIME;
       shovelBase(this.grid, true);
+    } else if (kind === "machinegun") {
+      this.machinegun = 10;
     }
   }
 

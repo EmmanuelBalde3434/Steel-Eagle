@@ -150,7 +150,190 @@ const RAW: string[] = [
 .#%~-#%-~#%.#
 @.@.@.@.@.@.@
 `,
+
+// 9 — El laberinto de hielo (aprovechando tu nueva física)
+  `
+.............
+.-#--###--#-.
+.-#.......#-.
+.---.%%%.---.
+.##.#.@.#.##.
+.#....#....#.
+.-.##.#.##.-.
+.#....#....#.
+.##.#.@.#.##.
+.---.%%%.---.
+.-#.......#-.
+.-#--###--#-.
+.............
+`,
+  // 10 — Río Dividido (te obliga a disparar a través del agua o buscar los puentes)
+  `
+.............
+.#.#.~~~.#.#.
+.#.#.~~~.#.#.
+.............
+.@@@.~~~.@@@.
+.%.......~.%.
+.~~~.###.~~~.
+.%.~.......%.
+.@@@.~~~.@@@.
+.............
+.#.#.~~~.#.#.
+.#.#.~~~.#.#.
+.............
+`,
+  // 11 — Fortaleza de Acero (cobertura dura, necesitas la estrella para abrir atajos)
+  `
+.............
+.@@@.....@@@.
+.@.#.###.#.@.
+.@.#.%~%.#.@.
+...#.....#...
+.#.@@.#.@@.#.
+.#.........#.
+.#.@@.#.@@.#.
+...#.....#...
+.@.#.%~%.#.@.
+.@.#.###.#.@.
+.@@@.....@@@.
+.............
+`,
+  // 12 — Zona de Francotiradores (mucho arbusto, emboscadas peligrosas)
+  `
+.%%%%%%%%%%%.
+.%#.......#%.
+.%#.##.##.#%.
+.%.........%.
+...##.#.##...
+@#.#..%..#.#@
+...#..%..#...
+@#.#..%..#.#@
+...##.#.##...
+.%.........%.
+.%#.##.##.#%.
+.%#.......#%.
+.%%%%%%%%%%%.
+`,
+
+// 13 — Pasillos cruzados
+  `
+.............
+.##.#####.##.
+.##.......##.
+....#.#.#....
+.###.%.%.###.
+.#...#.#...#.
+...#.....#...
+.#...#.#...#.
+.###.%.%.###.
+....#.#.#....
+.##.......##.
+.##.#####.##.
+.............
+`,
+  // 14 — Tetris
+  `
+.............
+.###..#..###.
+...#..#..#...
+.#.####..#.#.
+.#.......#.#.
+.####..####..
+.............
+..####..####.
+.#.......#.#.
+.#.#..####.#.
+...#..#..#...
+.###..#..###.
+.............
+`,
+  // 15 — Inundación
+  `
+.............
+.~~~.###.~~~.
+.~.~.#.#.~.~.
+.~.~.....~.~.
+...##.%.##...
+.#..#.@.#..#.
+.#.........#.
+.#..#.@.#..#.
+...##.%.##...
+.~.~.....~.~.
+.~.~.#.#.~.~.
+.~~~.###.~~~.
+.............
+`,
+  // 16 — Ruinas
+  `
+.%%.......%%.
+.%.##---##.%.
+...#.....#...
+.#.#.@@@.#.#.
+.-.#.%~%.#.-.
+.#...#.#...#.
+.............
+.#...#.#...#.
+.-.#.%~%.#.-.
+.#.#.@@@.#.#.
+...#.....#...
+.%.##---##.%.
+.%%.......%%.
+`,
+
 ];
+
+const HARD_MAPS: string[] = [
+  // Pesadilla 1: Emboscada en el hielo (Poco espacio para cubrirte, resbalas directo al peligro)
+  `
+.##-------##.
+.#.@@@@@@@.#.
+.#.........#.
+.---.###.---.
+.@@#.#.#.#@@.
+.%...#.#...%.
+.@@#.#.#.#@@.
+.---.###.---.
+.#.........#.
+.#.@@@@@@@.#.
+.##-------##.
+.............
+.............
+`,
+  // Pesadilla 2: Fortaleza impenetrable (Los enemigos están protegidos por agua y acero)
+  `
+.@@@.%%%.@@@.
+.@.#.%%%.#.@.
+.~.~.....~.~.
+.~.~.###.~.~.
+...#.....#...
+.###.@@@.###.
+...#.....#...
+.###.@@@.###.
+.~.~.....~.~.
+.~.~.###.~.~.
+.@.#.%%%.#.@.
+.@@@.%%%.@@@.
+.............
+`,
+  // Pesadilla 3: Zona Cero (Ataques directos a tu base, sin muros laterales)
+  `
+@...........@
+.@@@.---.@@@.
+.@%@.---.@%@.
+...#.....#...
+.#.#.###.#.#.
+.#.........#.
+.#.@@...@@.#.
+.#.........#.
+.#.#.###.#.#.
+...#.....#...
+.@%@.---.@%@.
+.@@@.---.@@@.
+.............
+`
+];
+
 
 function parseMap(src: string): number[][] {
   const rows = src
@@ -222,7 +405,7 @@ export function applyBase(grid: number[][], stage: number): void {
   }
   // Player spawn (tile 4,12)
   for (let y = 24; y < 26; y++) {
-    for (let x = 8; x < 12; x++) {
+    for (let x = 8; x < 10; x++) {
       if (grid[y]![x] !== TILE_EAGLE) grid[y]![x] = TILE_EMPTY;
     }
   }
@@ -249,9 +432,30 @@ export function shovelBase(grid: number[][], steel: boolean): void {
   }
 }
 
+// Lista que guardará el orden aleatorio de los mapas
+let levelPool: number[] = [];
+
+// Función para revolver los niveles
+export function resetLevelPool() {
+  levelPool = RAW.map((_, i) => i).sort(() => Math.random() - 0.5);
+}
+
 export function buildLevel(stage: number): number[][] {
-  const idx = Math.max(0, Math.min(RAW.length - 1, stage - 1));
-  const grid = parseMap(RAW[idx]!);
+  let gridStr = "";
+
+  // Si estamos en los niveles finales (7 u 8), sacamos un mapa de la lista HARD
+  if (stage >= 13) {
+    const randomHardIdx = Math.floor(Math.random() * HARD_MAPS.length);
+    gridStr = HARD_MAPS[randomHardIdx]!;
+  } 
+  // Para los niveles del 1 al 6, seguimos usando tu sistema de baraja sin repetir
+  else {
+    if (levelPool.length === 0) resetLevelPool();
+    const idx = levelPool.pop()!;
+    gridStr = RAW[idx]!;
+  }
+
+  const grid = parseMap(gridStr);
   applyBase(grid, stage);
   return grid;
 }

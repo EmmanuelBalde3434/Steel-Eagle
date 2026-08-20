@@ -11,7 +11,7 @@ export type Mode =
 
 export type TankKind = "player" | "basic" | "fast" | "armor";
 
-export type PowerKind = "star" | "life" | "bomb" | "clock" | "helmet" | "shovel";
+export type PowerKind = "star" | "life" | "bomb" | "clock" | "helmet" | "shovel" | "machinegun";
 
 export type Tank = {
   id: number;

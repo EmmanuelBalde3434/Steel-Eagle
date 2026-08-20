@@ -65,4 +65,4 @@ export const TILE_BUSH = 5;
 export const TILE_EAGLE = 6;
 export const TILE_EAGLE_DEAD = 7;
 
-export const TOTAL_STAGES = 8;
+export const TOTAL_STAGES = 15;

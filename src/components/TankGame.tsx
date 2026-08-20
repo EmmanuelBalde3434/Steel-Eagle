@@ -86,18 +86,7 @@ export function TankGame() {
           >
             {muted ? "Sonido off" : "Sonido"}
           </button>
-          {isPending ? (
-            <div className="h-8 w-8 animate-pulse rounded-full bg-elevated" />
-          ) : user ? (
-            <UserButton />
-          ) : (
-            <Link
-              to="/login"
-              className="inline-flex h-10 items-center rounded-md border border-line bg-surface px-3 text-xs text-muted hover:text-fg"
-            >
-              Entrar
-            </Link>
-          )}
+       
         </div>
       </header>
 
